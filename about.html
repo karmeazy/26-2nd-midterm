@@ -19,7 +19,7 @@
 
         body {
             font-family: 'Courier New', monospace;
-            background: #b6c6fa;
+            background: #0046F0;
         }
 
         main {
@@ -48,37 +48,87 @@
             pointer-events: none;
         }
 
-        /* 왼쪽 중앙 큐브 회전 버튼 */
+        /* 왼쪽 중앙 버튼 영역 */
         .cube-controls {
             position: absolute;
             z-index: 6;
-            left: 2.75vw;
+            left: 3.4vw;
             top: 50%;
             transform: translateY(-50%);
+
             display: flex;
             flex-direction: column;
-            gap: clamp(10px, 1.55vh, 20px);
+            gap: 20px;
         }
 
+        /* 원형 아이콘 + 텍스트 전체가 클릭 영역 */
         .cube-button {
-            display: block;
-            width: clamp(50px, 4.95vw, 104px);
-            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+
+            width: auto;
+            height: auto;
+            margin: 0;
             padding: 0;
-            border: clamp(10px, 1.05vw, 22px) solid #c738b0;
-            border-radius: 50%;
-            background: #97e7e7;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+
+            color: #FFFFFF;
+            font-family: 'Courier New', monospace;
+            font-size: clamp(14px, 1.05vw, 22px);
+            font-weight: 400;
+            line-height: 1.2;
+            text-align: left;
+
             cursor: pointer;
             touch-action: manipulation;
         }
 
+        /* 원형 그래픽 */
+        .cube-button::before {
+            content: '';
+            display: block;
+            flex-shrink: 0;
+
+            width: clamp(22px, 1.8vw, 36px);
+            border: clamp(5px, 0.45vw, 9px) solid #c738b0;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: #97e7e7;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        /* 버튼 문구 */
+        .cube-button span {
+            text-decoration: none;
+        }
+
+        .cube-button:hover::before {
+            border-color: #97e7e7;
+            background: #c738b0;
+        }
+
         .cube-button:active {
-            background: #75d9d9;
+            background: transparent;
         }
 
         .cube-button:focus-visible {
-            outline: 3px solid #222222;
-            outline-offset: 5px;
+            outline: 2px solid #557dff;
+            outline-offset: 6px;
+        }
+
+        @media (max-width: 600px) {
+            .cube-controls {
+                left: 4vw;
+                gap: 16px;
+            }
+
+            .cube-button {
+                gap: 10px;
+                font-size: 12px;
+            }
         }
 
         /* 중앙 인물과 큐브 */
@@ -155,6 +205,7 @@
 
             border: 1px solid #555555;
             backface-visibility: hidden;
+            cursor: pointer;
 
             background-size: cover;
             background-position: center;
@@ -211,6 +262,91 @@
             transform:
                 rotateX(-90deg)
                 translateZ(calc(var(--cube-size) / 2));
+        }
+
+        /* 큐브 전개도: 가로로 뒷면 / 왼쪽 / 앞면 / 오른쪽 */
+        main.is-unfolded .figure {
+            --net-size: min(14.3vw, 25.5dvh);
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            transform: none;
+        }
+
+        main.is-unfolded .body-image {
+            visibility: hidden;
+        }
+
+        main.is-unfolded .cube-scene {
+            top: 52%;
+            left: 52%;
+            width: calc(var(--net-size) * 4);
+            height: calc(var(--net-size) * 3);
+            transform: translate(-50%, -50%);
+            perspective: none;
+            cursor: default;
+            touch-action: auto;
+        }
+
+        main.is-unfolded .cube {
+            transform: none !important;
+            transform-style: flat;
+        }
+
+        main.is-unfolded .cube-face {
+            inset: auto;
+            width: var(--net-size);
+            height: var(--net-size);
+            border: 1.5px solid #557dff;
+            transform: none;
+            backface-visibility: visible;
+        }
+
+        main.is-unfolded .cube-face.back {
+            left: 0;
+            top: var(--net-size);
+        }
+
+        main.is-unfolded .cube-face.left {
+            left: var(--net-size);
+            top: var(--net-size);
+        }
+
+        main.is-unfolded .cube-face.front {
+            left: calc(var(--net-size) * 2);
+            top: var(--net-size);
+        }
+
+        main.is-unfolded .cube-face.right {
+            left: calc(var(--net-size) * 3);
+            top: var(--net-size);
+        }
+
+        main.is-unfolded .cube-face.top {
+            left: calc(var(--net-size) * 2);
+            top: 0;
+        }
+
+        main.is-unfolded .cube-face.bottom {
+            left: calc(var(--net-size) * 2);
+            top: calc(var(--net-size) * 2);
+        }
+
+        @media (max-width: 600px) {
+            main.is-unfolded .figure {
+                --net-size: min(22vw, 20dvh);
+            }
+
+            main.is-unfolded .cube-scene {
+                left: 50%;
+                top: 40%;
+            }
+
+            main.is-unfolded .cube-controls {
+                top: auto;
+                bottom: 9dvh;
+                transform: none;
+            }
         }
 
         /* 모서리 이동용 비율 그래픽 */
@@ -340,27 +476,37 @@
     <main>
         <div class="top-bar" aria-hidden="true"></div>
 
-        <!-- 위: 몸 이미지 전환 / 아래: 큐브 각 면 이미지 섞기 -->
         <div class="cube-controls">
             <button
                 class="cube-button"
                 type="button"
                 data-action="toggle-body"
-                aria-label="동물 몸으로 전환"
                 aria-pressed="false"
-                title="몸 이미지 전환"
-            ></button>
+            >
+                <span>change body</span>
+            </button>
+
             <button
                 class="cube-button"
                 type="button"
                 data-action="shuffle-faces"
-                aria-label="큐브 인간 원숭이 이미지 섞기"
-                title="큐브 이미지 섞기"
-            ></button>
+            >
+                <span>random face</span>
+            </button>
+
+            <button
+                class="cube-button"
+                type="button"
+                data-action="toggle-unfold"
+                aria-controls="cube-figure"
+                aria-expanded="false"
+            >
+                <span>unfold cube</span>
+            </button>
         </div>
 
         <!-- 중앙 남성 이미지와 큐브 -->
-        <div class="figure">
+        <div class="figure" id="cube-figure">
             <img
                 class="body-image"
                 src="body.png"
@@ -437,6 +583,66 @@
             shuffleFaces();
         }
 
+        /* 각 면 클릭: 해당 면만 인간 ↔ 원숭이 전환 */
+        function setupFaceClick() {
+            const scene = document.querySelector('.cube-scene');
+            const directions = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+            let startX = 0;
+            let startY = 0;
+            let moved = false;
+
+            scene.addEventListener('pointerdown', (event) => {
+                if (!event.isPrimary || event.button !== 0) return;
+                startX = event.clientX;
+                startY = event.clientY;
+                moved = false;
+            });
+
+            scene.addEventListener('pointermove', (event) => {
+                if (Math.hypot(event.clientX - startX, event.clientY - startY) > 6) {
+                    moved = true;
+                }
+            });
+
+            scene.addEventListener('pointercancel', () => {
+                moved = true;
+            });
+
+            scene.addEventListener('click', (event) => {
+                if (moved) return;
+                // 회전 중 포인터 캡처로 click의 대상이 scene이 되는 경우도 처리
+                const target = document.elementFromPoint(event.clientX, event.clientY);
+                const face = target && target.closest('.cube-face');
+                if (!face || !scene.contains(face)) return;
+
+                const direction = directions.find((name) => face.classList.contains(name));
+                if (!direction) return;
+
+                const kind = face.dataset.species === 'ape' ? 'human' : 'ape';
+                face.dataset.species = kind;
+                face.style.backgroundImage = `url("${kind}_${direction}.png")`;
+            });
+        }
+
+        /* 세 번째 버튼: 큐브와 전개도 전환 */
+        function setupCubeUnfold() {
+            const main = document.querySelector('main');
+            const button = document.querySelector('[data-action="toggle-unfold"]');
+            const scene = document.querySelector('.cube-scene');
+
+            button.addEventListener('click', () => {
+                const unfolded = main.classList.toggle('is-unfolded');
+                button.setAttribute('aria-expanded', String(unfolded));
+                button.querySelector('span').textContent =
+                    unfolded ? 'fold cube' : 'unfold cube';
+                scene.setAttribute(
+                    'aria-label',
+                    unfolded ? '큐브 여섯 면의 전개도' : '드래그하여 회전하는 큐브'
+                );
+                scene.classList.remove('is-rotating');
+            });
+        }
+
         /* 큐브 드래그 회전 */
         function setupCubeRotation() {
             const scene = document.querySelector('.cube-scene');
@@ -465,6 +671,7 @@
             });
 
             scene.addEventListener('pointerdown', (event) => {
+                if (document.querySelector('main').classList.contains('is-unfolded')) return;
                 if (
                     !event.isPrimary ||
                     event.button !== 0 ||
@@ -785,6 +992,8 @@
 
         setupFaceShuffle();
         setupCubeRotation();
+        setupCubeUnfold();
+        setupFaceClick();
         setupCornerNavigation();
     </script>
 </body>

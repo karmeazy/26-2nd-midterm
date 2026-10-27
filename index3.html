@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="favicon.png">
     <style>
         :root {
-            --page-background: #f5f5f5;
+            --page-background: #2c2c2c;
             --stripe-blue: #80bdff;
             --stripe-peach: #ffe8dd;
         }
@@ -26,85 +26,64 @@
         body {
             font-family: 'Courier New', monospace;
             background: var(--page-background);
-            color: #000000;
+            color: #ffffff;
         }
 
-        /* 문구와 얼굴 박스를 별도의 행으로 배치 */
+        /* 화면 중앙의 큰 플립 프레임 */
         main {
             position: relative;
-            display: grid;
-            grid-template-rows: auto minmax(0, 1fr);
-            row-gap: 3vh;
-
             width: 100%;
             height: 100dvh;
-            padding-block: 6vh;
-
             overflow: hidden;
             isolation: isolate;
         }
 
-        /* 양쪽 세로 띠 */
-        main::before,
+        /* 우측 가장자리 반복 컬러 바 */
         main::after {
             content: '';
             position: absolute;
-            z-index: 0;
+            z-index: 3;
             top: 0;
-            bottom: 0;
+            right: 0;
             width: 2.75vw;
-
+            height: 100%;
             background: repeating-linear-gradient(
                 180deg,
-                var(--stripe-blue) 0 4.9vh,
-                var(--stripe-peach) 4.9vh 19.05vh
+                #d500f9 0 4.9vh,
+                #ff0066 4.9vh 19.05vh
             );
-
             pointer-events: none;
         }
 
-        main::before {
-            left: 18.35vw;
-        }
-
-        main::after {
-            right: 19.9vw;
-        }
-
-        /* 상단 문구 */
+        /* 우측 상단 안내 문구 */
         .description {
-            position: relative;
+            position: absolute;
             z-index: 2;
-            justify-self: center;
-
-            width: min(70vw, 1300px);
+            top: 3vh;
+            right: 4.1vw;
+            width: 92vw;
             margin: 0;
-
-            font-size: 16px;
+            color: #ffffff;
+            font-size: clamp(11px, 0.82vw, 18px);
             font-weight: 400;
             line-height: 1.35;
             letter-spacing: 0.025em;
-            text-align: center;
-
+            text-align: right;
             pointer-events: none;
         }
 
-        /* 남은 높이에 맞춰 얼굴 박스 배치 */
         .face-stage {
-            position: relative;
+            position: absolute;
             z-index: 1;
-            justify-self: center;
-            align-self: center;
-
-            height: 100%;
-            max-height: min(72dvh, 50.6667vw);
-            min-height: 0;
-
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            height: min(77.6dvh, 112vw);
             width: auto;
             aspect-ratio: 3 / 4;
         }
 
-        /* 카드 사이 틈은 페이지 배경색 */
+        /* 프레임의 굵은 분할선은 검정색 */
         .face-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -117,7 +96,7 @@
             padding: 0;
             border: 0;
 
-            background: var(--page-background);
+            background: #000000;
         }
 
         .face-part {
@@ -374,23 +353,18 @@
         }
 
         @media (max-width: 600px) {
-            main::before {
-                left: 2.5vw;
-            }
-
-            main::after {
-                right: 2.5vw;
-            }
-
             .description {
-                width: 84vw;
+                top: 3vh;
+                right: 5vw;
+                width: 90vw;
                 font-size: 10px;
                 line-height: 1.45;
-                font-weight: 700;
+                font-weight: 400;
             }
 
             .face-stage {
-                max-height: min(57.3333dvh, 101.3333vw);
+                top: 54%;
+                height: min(68dvh, 112vw);
             }
 
             .ratio {
@@ -408,8 +382,7 @@
 <body>
     <main>
         <p class="description">
-            We watch, classify, and explain other living beings,<br>
-            as if we stand outside their gaze.<br>
+            We watch, classify, and explain other living beings, as if we stand outside their gaze.<br>
             Now that gaze turns back on us,
             questioning the place we take for granted.<br>
             Are you still the observer?

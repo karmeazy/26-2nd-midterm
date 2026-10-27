@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Zoo | ooZ — ABOUT</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #b6c6fa;
+        }
+
+        main {
+            position: relative;
+            width: 100%;
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        /* 상단 반복 그래픽 */
+        .top-bar {
+            position: absolute;
+            z-index: 3;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4.9vh;
+
+            /* 반복 간격을 화면 폭에 맞춰 계산 */
+            background: repeating-linear-gradient(
+                90deg,
+                #557dff 0 2.75vw,
+                #00ef00 2.75vw calc((100vw - 2.75vw) / 9)
+            );
+
+            pointer-events: none;
+        }
+
+        /* 왼쪽 중앙 큐브 회전 버튼 */
+        .cube-controls {
+            position: absolute;
+            z-index: 6;
+            left: 2.75vw;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(10px, 1.55vh, 20px);
+        }
+
+        .cube-button {
+            display: block;
+            width: clamp(50px, 4.95vw, 104px);
+            aspect-ratio: 1;
+            padding: 0;
+            border: clamp(10px, 1.05vw, 22px) solid #c738b0;
+            border-radius: 50%;
+            background: #97e7e7;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .cube-button:active {
+            background: #75d9d9;
+        }
+
+        .cube-button:focus-visible {
+            outline: 3px solid #222222;
+            outline-offset: 5px;
+        }
+
+        /* 중앙 인물과 큐브 */
+        .figure {
+            /* 인물 크기 */
+            --figure-height: min(80dvh, 120vw);
+
+            /* 큐브 한 변 길이 */
+            --cube-size: min(28dvh, 40vw);
+
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+
+            height: var(--figure-height);
+            width: max-content;
+
+            pointer-events: none;
+        }
+
+        /* 남성 이미지: 하단을 화면 하단에 고정 */
+        .body-image {
+            display: block;
+            width: auto;
+            height: 100%;
+            max-width: none;
+
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-user-drag: none;
+            pointer-events: none;
+        }
+
+        /* 큐브 위치 */
+        .cube-scene {
+            position: absolute;
+            z-index: 2;
+
+            /* 숫자를 키우면 큐브가 아래로 이동 */
+            top: 0%;
+
+            left: 50%;
+            transform: translateX(-50%);
+
+            width: var(--cube-size);
+            height: var(--cube-size);
+
+            perspective: 1100px;
+            pointer-events: auto;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: grab;
+        }
+
+        .cube-scene.is-rotating {
+            cursor: grabbing;
+        }
+
+        /* 큐브 전체 */
+        .cube {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transform: rotateX(-18deg) rotateY(-28deg);
+        }
+
+        /* 큐브 각 면 */
+        .cube-face {
+            position: absolute;
+            inset: 0;
+
+            border: 1px solid #555555;
+            backface-visibility: hidden;
+
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /*
+            이미지 추가 예시:
+            background-image: url('front.png');
+        */
+
+        .cube-face.front {
+            background-image: url('human_front.png');
+            background-color: #d8d8d8;
+            transform:
+                translateZ(calc(var(--cube-size) / 2));
+        }
+
+        .cube-face.back {
+            background-image: url('human_back.png');
+            background-color: #a9a9a9;
+            transform:
+                rotateY(180deg)
+                translateZ(calc(var(--cube-size) / 2));
+        }
+
+        .cube-face.right {
+            background-image: url('human_right.png');
+            background-color: #bcbcbc;
+            transform:
+                rotateY(90deg)
+                translateZ(calc(var(--cube-size) / 2));
+        }
+
+        .cube-face.left {
+            background-image: url('human_left.png');
+            background-color: #c9c9c9;
+            transform:
+                rotateY(-90deg)
+                translateZ(calc(var(--cube-size) / 2));
+        }
+
+        .cube-face.top {
+            background-image: url('human_top.png');
+            background-color: #eeeeee;
+            transform:
+                rotateX(90deg)
+                translateZ(calc(var(--cube-size) / 2));
+        }
+
+        .cube-face.bottom {
+            background-image: url('human_bottom.png');
+            background-color: #888888;
+            transform:
+                rotateX(-90deg)
+                translateZ(calc(var(--cube-size) / 2));
+        }
+
+        /* 모서리 이동용 비율 그래픽 */
+        .ratio {
+            position: absolute;
+            z-index: 8;
+            display: grid;
+            grid-template-columns:
+                repeat(4, clamp(18px, 1.78vw, 36px));
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .ratio[data-corner="top-left"] {
+            top: 4.6vh;
+            left: 2.15vw;
+        }
+
+        .ratio[data-corner="top-right"] {
+            top: 4.6vh;
+            right: 2.15vw;
+        }
+
+        .ratio[data-corner="bottom-left"] {
+            bottom: 4.6vh;
+            left: 2.15vw;
+        }
+
+        .ratio[data-corner="bottom-right"] {
+            bottom: 4.6vh;
+            right: 2.15vw;
+        }
+
+        .ratio.is-dragging {
+            cursor: grabbing;
+            bottom: auto;
+        }
+
+        .dot {
+            width: clamp(18px, 1.78vw, 36px);
+            height: clamp(18px, 1.78vw, 36px);
+            border: 2px solid #ff00db;
+            background: #ff002b;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .dot.animal {
+            background: #00ffe4;
+            border-color: #00ff41;
+        }
+
+        /* 페이지 이동 목적지 */
+        .corner-navigation {
+            position: absolute;
+            inset: 0;
+            z-index: 7;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        main.is-navigating .corner-navigation {
+            visibility: visible;
+        }
+
+        .corner-link {
+            position: absolute;
+            display: grid;
+            place-items: center;
+
+            width: clamp(90px, 23%, 180px);
+            height: clamp(90px, 20%, 150px);
+            padding: 12px;
+
+            border: 1px dashed #feffd8;
+            background: rgb(44 44 44 / 80%);
+            color: #feffd8;
+
+            font-size: clamp(11px, 1vw, 15px);
+            text-align: center;
+            text-decoration: none;
+
+            transition: background-color 0.15s ease;
+        }
+
+        .corner-link[data-corner="top-left"] {
+            top: 0;
+            left: 0;
+        }
+
+        .corner-link[data-corner="top-right"] {
+            top: 0;
+            right: 0;
+        }
+
+        .corner-link[data-corner="bottom-left"] {
+            bottom: 0;
+            left: 0;
+        }
+
+        .corner-link[data-corner="bottom-right"] {
+            bottom: 0;
+            right: 0;
+        }
+
+        .corner-link.is-target {
+            border-style: solid;
+            background: #2b80ff;
+            color: #ffffff;
+        }
+
+        @media (max-width: 600px) {
+            .ratio {
+                grid-template-columns: repeat(4, 4.5vw);
+            }
+
+            .dot {
+                width: 4.5vw;
+                height: 4.5vw;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div class="top-bar" aria-hidden="true"></div>
+
+        <!-- 위: 몸 이미지 전환 / 아래: 큐브 각 면 이미지 섞기 -->
+        <div class="cube-controls">
+            <button
+                class="cube-button"
+                type="button"
+                data-action="toggle-body"
+                aria-label="동물 몸으로 전환"
+                aria-pressed="false"
+                title="몸 이미지 전환"
+            ></button>
+            <button
+                class="cube-button"
+                type="button"
+                data-action="shuffle-faces"
+                aria-label="큐브 인간 원숭이 이미지 섞기"
+                title="큐브 이미지 섞기"
+            ></button>
+        </div>
+
+        <!-- 중앙 남성 이미지와 큐브 -->
+        <div class="figure">
+            <img
+                class="body-image"
+                src="body.png"
+                alt="남성 상반신"
+                draggable="false"
+            >
+
+            <div
+                class="cube-scene"
+                aria-label="드래그하여 회전하는 큐브"
+            >
+                <div class="cube">
+                    <div class="cube-face front"></div>
+                    <div class="cube-face back"></div>
+                    <div class="cube-face right"></div>
+                    <div class="cube-face left"></div>
+                    <div class="cube-face top"></div>
+                    <div class="cube-face bottom"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 모서리 드래그 페이지 이동 -->
+        <div
+            class="ratio"
+            data-corner="bottom-right"
+            title="모서리로 드래그하여 페이지 이동"
+        ></div>
+
+        <nav class="corner-navigation">
+            <a class="corner-link" data-corner="top-left"
+                href="index2.html">LAB ↖</a>
+
+            <a class="corner-link" data-corner="top-right"
+                href="index.html">ZOO ↗</a>
+
+            <a class="corner-link" data-corner="bottom-left"
+                href="index3.html">FLIP CARD ↙</a>
+
+            <a class="corner-link" data-corner="bottom-right"
+                href="about.html">CUBE ↘</a>
+        </nav>
+    </main>
+
+    <script>
+        /* 같은 방향의 인간·원숭이 이미지 중 각 면을 독립적으로 선택 */
+        function setupFaceShuffle() {
+            const directions = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+            const species = ['human', 'ape'];
+
+            // 이미지 12장을 미리 불러오기
+            const preloadImages = [];
+            for (const direction of directions) {
+                for (const kind of species) {
+                    const image = new Image();
+                    image.src = `${kind}_${direction}.png`;
+                    preloadImages.push(image);
+                }
+            }
+
+            function shuffleFaces() {
+                for (const direction of directions) {
+                    const kind = Math.random() < 0.5 ? 'human' : 'ape';
+                    const face = document.querySelector(`.cube-face.${direction}`);
+                    face.style.backgroundImage = `url("${kind}_${direction}.png")`;
+                    face.dataset.species = kind;
+                }
+            }
+
+            document.querySelector('[data-action="shuffle-faces"]')
+                .addEventListener('click', shuffleFaces);
+
+            // 첫 화면에서도 여섯 면을 랜덤으로 구성
+            shuffleFaces();
+        }
+
+        /* 큐브 드래그 회전 */
+        function setupCubeRotation() {
+            const scene = document.querySelector('.cube-scene');
+            const cube = document.querySelector('.cube');
+
+            let rotationX = -18;
+            let rotationY = -28;
+            let drag = null;
+
+            // 숫자가 클수록 드래그 회전량 증가
+            const sensitivity = 0.45;
+
+            const bodyImage = document.querySelector('.body-image');
+            const bodyButton = document.querySelector('[data-action="toggle-body"]');
+            let animalBody = false;
+
+            bodyButton.addEventListener('click', () => {
+                animalBody = !animalBody;
+                bodyImage.src = animalBody ? 'abody.png' : 'body.png';
+                bodyImage.alt = animalBody ? '동물 상반신' : '남성 상반신';
+                bodyButton.setAttribute('aria-pressed', String(animalBody));
+                bodyButton.setAttribute(
+                    'aria-label',
+                    animalBody ? '사람 몸으로 전환' : '동물 몸으로 전환'
+                );
+            });
+
+            scene.addEventListener('pointerdown', (event) => {
+                if (
+                    !event.isPrimary ||
+                    event.button !== 0 ||
+                    drag
+                ) {
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                drag = {
+                    pointerId: event.pointerId,
+                    lastX: event.clientX,
+                    lastY: event.clientY
+                };
+
+                scene.setPointerCapture(event.pointerId);
+                scene.classList.add('is-rotating');
+            });
+
+            scene.addEventListener('pointermove', (event) => {
+                if (!drag || drag.pointerId !== event.pointerId) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                const deltaX = event.clientX - drag.lastX;
+                const deltaY = event.clientY - drag.lastY;
+
+                rotationY += deltaX * sensitivity;
+                rotationX -= deltaY * sensitivity;
+
+                cube.style.transform = `
+                    rotateX(${rotationX}deg)
+                    rotateY(${rotationY}deg)
+                `;
+
+                drag.lastX = event.clientX;
+                drag.lastY = event.clientY;
+            });
+
+            function finishRotation(event) {
+                if (!drag || drag.pointerId !== event.pointerId) {
+                    return;
+                }
+
+                const pointerId = drag.pointerId;
+                drag = null;
+
+                scene.classList.remove('is-rotating');
+
+                if (scene.hasPointerCapture(pointerId)) {
+                    scene.releasePointerCapture(pointerId);
+                }
+            }
+
+            scene.addEventListener('pointerup', finishRotation);
+            scene.addEventListener('pointercancel', finishRotation);
+            scene.addEventListener(
+                'lostpointercapture',
+                finishRotation
+            );
+
+            scene.addEventListener('dragstart', (event) => {
+                event.preventDefault();
+            });
+
+            window.addEventListener('blur', () => {
+                if (drag) {
+                    finishRotation({
+                        pointerId: drag.pointerId
+                    });
+                }
+            });
+        }
+
+        /* 모서리 드래그 페이지 이동 */
+        function setupCornerNavigation() {
+            const main = document.querySelector('main');
+            const ratio = document.querySelector('.ratio');
+            const links = Array.from(
+                document.querySelectorAll('.corner-link')
+            );
+
+            let drag = null;
+
+            function findCorner(x, y) {
+                const bounds = main.getBoundingClientRect();
+
+                const width = Math.min(
+                    180,
+                    Math.max(90, bounds.width * 0.23)
+                );
+
+                const height = Math.min(
+                    150,
+                    Math.max(90, bounds.height * 0.2)
+                );
+
+                const left =
+                    x >= bounds.left &&
+                    x <= bounds.left + width;
+
+                const right =
+                    x <= bounds.right &&
+                    x >= bounds.right - width;
+
+                const top =
+                    y >= bounds.top &&
+                    y <= bounds.top + height;
+
+                const bottom =
+                    y <= bounds.bottom &&
+                    y >= bounds.bottom - height;
+
+                if (left && top) return 'top-left';
+                if (right && top) return 'top-right';
+                if (left && bottom) return 'bottom-left';
+                if (right && bottom) return 'bottom-right';
+
+                return null;
+            }
+
+            function highlight(corner) {
+                links.forEach((link) => {
+                    link.classList.toggle(
+                        'is-target',
+                        link.dataset.corner === corner
+                    );
+                });
+            }
+
+            function restore() {
+                ratio.style.removeProperty('left');
+                ratio.style.removeProperty('top');
+                ratio.style.removeProperty('right');
+
+                main.classList.remove('is-navigating');
+                ratio.classList.remove('is-dragging');
+
+                highlight(null);
+            }
+
+            ratio.addEventListener('pointerdown', (event) => {
+                if (
+                    !event.isPrimary ||
+                    event.button !== 0 ||
+                    drag
+                ) {
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                const bounds = ratio.getBoundingClientRect();
+
+                drag = {
+                    pointerId: event.pointerId,
+                    startX: event.clientX,
+                    startY: event.clientY,
+                    offsetX: event.clientX - bounds.left,
+                    offsetY: event.clientY - bounds.top,
+                    moved: false
+                };
+
+                ratio.setPointerCapture(event.pointerId);
+            });
+
+            ratio.addEventListener('pointermove', (event) => {
+                if (!drag || drag.pointerId !== event.pointerId) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                if (!drag.moved) {
+                    const distance = Math.hypot(
+                        event.clientX - drag.startX,
+                        event.clientY - drag.startY
+                    );
+
+                    if (distance < 7) return;
+
+                    drag.moved = true;
+                    main.classList.add('is-navigating');
+
+                    const origin = ratio.getBoundingClientRect();
+                    const parent = main.getBoundingClientRect();
+
+                    ratio.style.left =
+                        `${origin.left - parent.left}px`;
+
+                    ratio.style.top =
+                        `${origin.top - parent.top}px`;
+
+                    ratio.style.right = 'auto';
+                    ratio.classList.add('is-dragging');
+                }
+
+                const bounds = main.getBoundingClientRect();
+                const graphic = ratio.getBoundingClientRect();
+
+                const x = Math.max(
+                    0,
+                    Math.min(
+                        bounds.width - graphic.width,
+                        event.clientX - bounds.left - drag.offsetX
+                    )
+                );
+
+                const y = Math.max(
+                    0,
+                    Math.min(
+                        bounds.height - graphic.height,
+                        event.clientY - bounds.top - drag.offsetY
+                    )
+                );
+
+                ratio.style.left = `${x}px`;
+                ratio.style.top = `${y}px`;
+                ratio.style.right = 'auto';
+
+                highlight(
+                    findCorner(event.clientX, event.clientY)
+                );
+            });
+
+            function finish(event, cancelled = false) {
+                if (!drag || drag.pointerId !== event.pointerId) {
+                    return;
+                }
+
+                const corner = !cancelled && drag.moved
+                    ? findCorner(event.clientX, event.clientY)
+                    : null;
+
+                const target = links.find(
+                    (link) => link.dataset.corner === corner
+                );
+
+                const pointerId = drag.pointerId;
+                drag = null;
+
+                if (ratio.hasPointerCapture(pointerId)) {
+                    ratio.releasePointerCapture(pointerId);
+                }
+
+                restore();
+
+                if (target) {
+                    window.location.assign(target.href);
+                }
+            }
+
+            ratio.addEventListener('pointerup', (event) => {
+                finish(event);
+            });
+
+            ratio.addEventListener('pointercancel', (event) => {
+                finish(event, true);
+            });
+
+            ratio.addEventListener(
+                'lostpointercapture',
+                (event) => {
+                    finish(event, true);
+                }
+            );
+
+            ratio.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+            });
+
+            ratio.addEventListener('dragstart', (event) => {
+                event.preventDefault();
+            });
+
+            window.addEventListener('resize', () => {
+                if (drag) {
+                    finish({ pointerId: drag.pointerId }, true);
+                }
+            });
+
+            window.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && drag) {
+                    finish({ pointerId: drag.pointerId }, true);
+                }
+            });
+        }
+
+        /* 비율 그래픽 */
+        const ratio = document.querySelector('.ratio');
+
+        const counts = {
+            human: 8,
+            animal: 8
+        };
+
+        const total = counts.human + counts.animal;
+
+        const humanDots = total
+            ? Math.round(counts.human / total * 16)
+            : 0;
+
+        for (let i = 0; i < 16; i++) {
+            const dot = document.createElement('span');
+
+            dot.className = i < humanDots
+                ? 'dot'
+                : 'dot animal';
+
+            ratio.append(dot);
+        }
+
+        setupFaceShuffle();
+        setupCubeRotation();
+        setupCornerNavigation();
+    </script>
+</body>
+</html>
